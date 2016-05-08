@@ -3,6 +3,7 @@ import pandas as pd
 from ystockquote import get_historical_prices
 
 def get_metrics(symbol, start_date=None, end_date=None, ts_getter=get_historical_prices):
+    # TODO: add test
     '''Use ystockquote functionality to get the timeseries df for a given ticker
     Args:
         symbol: ticker for which to get the metric
