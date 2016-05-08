@@ -11,7 +11,7 @@ def get_metrics(symbol, start_date=None, end_date=None, ts_getter=get_historical
         ts_getter: (function) ystockquote function that returns dictionary
     '''
     if start_date is None:
-        start_date = pd.to_datetime('2000-01-01').strftime('%Y-%m-%d')
+        start_date = '2000-01-01'
     if end_date is None:
         end_date = pd.to_datetime(datetime.datetime.today()).strftime('%Y-%m-%d')
     ts_dict = ts_getter(symbol, start_date, end_date)
