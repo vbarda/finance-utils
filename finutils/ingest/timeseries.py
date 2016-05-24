@@ -1,5 +1,7 @@
 import datetime
+import json
 import pandas as pd
+import urllib2
 from ystockquote import get_historical_prices
 
 def get_metrics(symbol, start_date=None, end_date=None, ts_getter=get_historical_prices):
@@ -21,7 +23,6 @@ def get_metrics(symbol, start_date=None, end_date=None, ts_getter=get_historical
 
 
 def combine_metrics(symbols, col_name='Adj Close', **kwargs):
-    # TODO: add test
     '''Creates a combined df for an iterable of tickers by picking
     specific column from get_metrics output
     Args:
@@ -30,9 +31,23 @@ def combine_metrics(symbols, col_name='Adj Close', **kwargs):
             Defaults to 'Adj Close'
         **kwargs: start_date, end_date and ts_getter(ystockquote function) for get_metrics
     '''
+    # TODO: add test
     if isinstance(symbols, str) or isinstance(symbols, unicode):
         symbols = [symbols]
     else:
         symbols = list(symbols)
     return pd.DataFrame.from_dict({symbol: get_metrics(symbol, **kwargs)[col_name]
                                    for symbol in symbols})
+
+
+def get_predictwise(link):
+    '''Scrape the data from predictwise.com'''
+    url = urllib2.urlopen(link)
+    js = json.load(url)
+    unpacker_func = (lambda x: pd.DataFrame(x.get('table'))
+                                 .assign(date=x.get('timestamp')))
+    df_list = map(unpacker_func, js['history'])
+    df = pd.concat(df_list).set_index('date')
+    df.index = pd.to_datetime(df.index)
+    df.columns = js.get('header')
+    return df
