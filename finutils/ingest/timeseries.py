@@ -32,10 +32,8 @@ def combine_metrics(symbols, col_name='Adj Close', **kwargs):
         **kwargs: start_date, end_date and ts_getter(ystockquote function) for get_metrics
     '''
     # TODO: add test
-    if isinstance(symbols, str) or isinstance(symbols, unicode):
+    if not hasattr(symbols, '__iter__'):
         symbols = [symbols]
-    else:
-        symbols = list(symbols)
     return pd.DataFrame.from_dict({symbol: get_metrics(symbol, **kwargs)[col_name]
                                    for symbol in symbols})
 
