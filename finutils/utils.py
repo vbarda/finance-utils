@@ -1,3 +1,4 @@
+import datetime
 import funcy
 import pandas as pd
 
@@ -26,3 +27,12 @@ def split_to_numeric(ser, delim=' ', side=0):
         side: (int) left (0) or right (1) side of the split
     '''
     return ser.apply(lambda x: pd.to_numeric(x.split(delim)[side]))
+
+def get_last_business_day(date):
+    '''Find the last business day prior to date specified
+    Args:
+        date: (str) date
+    '''
+    end_date = pd.to_datetime(date)
+    start_date = end_date - datetime.timedelta(7)
+    return pd.bdate_range(start=start_date, end=end_date)[-1]
