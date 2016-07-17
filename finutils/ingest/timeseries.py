@@ -1,7 +1,14 @@
+'''
+    Filename: timeseries.py
+    Author: Vadym Barda <vadim.barda@gmail.com>
+    Maintainer: Vadym Barda <vadim.barda@gmail.com>
+    URL: https://github.com/vbarda/finance-utils/
+'''
+
 import datetime
 import json
-import pandas as pd
 import urllib2
+import pandas as pd
 from ystockquote import get_historical_prices
 
 def get_metrics(symbol, start_date=None, end_date=None, ts_getter=get_historical_prices):
@@ -41,11 +48,10 @@ def combine_metrics(symbols, col_name='Adj Close', **kwargs):
 def get_predictwise(link):
     '''Scrape the data from predictwise.com'''
     url = urllib2.urlopen(link)
-    js = json.load(url)
-    unpacker_func = (lambda x: pd.DataFrame(x.get('table'))
-                                 .assign(date=x.get('timestamp')))
-    df_list = map(unpacker_func, js['history'])
+    json_str = json.load(url)
+    df_list = [pd.DataFrame(x.get('table')).assign(date=x.get('timestamp'))
+               for x in json_str['history']]
     df = pd.concat(df_list).set_index('date')
     df.index = pd.to_datetime(df.index)
-    df.columns = js.get('header')
+    df.columns = json_str.get('header')
     return df

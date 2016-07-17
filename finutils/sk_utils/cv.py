@@ -1,3 +1,10 @@
+'''
+    Filename: cv.py
+    Author: Vadym Barda <vadim.barda@gmail.com>
+    Maintainer: Vadym Barda <vadim.barda@gmail.com>
+    URL: https://github.com/vbarda/finance-utils/
+'''
+
 import numpy as np
 from sklearn.cross_validation import train_test_split
 

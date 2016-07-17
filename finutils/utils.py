@@ -1,3 +1,10 @@
+'''
+    Filename: utils.py
+    Author: Vadym Barda <vadim.barda@gmail.com>
+    Maintainer: Vadym Barda <vadim.barda@gmail.com>
+    URL: https://github.com/vbarda/finance-utils/
+'''
+
 import datetime
 import funcy
 import pandas as pd
