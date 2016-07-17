@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import unittest
 
-from finutils.utils import column_renamer, lower_func, space_replace_func
+from finutils.utils import column_renamer, lower_func, space_replace_func, get_last_business_day
 from finutils.ingest.timeseries import get_metrics
 from finutils.sk_utils.cv import CV
 
@@ -29,12 +29,10 @@ class TestMetrics(unittest.TestCase):
 
     def test_metrics(self):
         ts = get_metrics('AAPL')
-        today = datetime.datetime.today()
-        correct_date = (today + datetime.timedelta(-1) if today.hour < 16
-                                                       else today)
+        today = pd.to_datetime(datetime.datetime.today()).normalize()
+        max_bdate = get_last_business_day(today)
         self.assertEqual(ts.index.min(), pd.to_datetime('2000-01-03'))
-        self.assertEqual(ts.index.max(),
-                         pd.to_datetime(correct_date).normalize())
+        self.assertEqual(ts.index.max(), max_bdate)
         desired_columns = ['Volume', 'Adj Close', 'High', 'Low', 'Close', 'Open']
         self.assertListEqual(sorted(desired_columns), sorted(ts.columns))
 
