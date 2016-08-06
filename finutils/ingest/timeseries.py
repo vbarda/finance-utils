@@ -29,20 +29,27 @@ def get_metrics(symbol, start_date=None, end_date=None, ts_getter=get_historical
     return ts_df
 
 
-def combine_metrics(symbols, col_name='Adj Close', **kwargs):
-    '''Creates a combined df for an iterable of tickers by picking
-    specific column from get_metrics output
+def get_close(symbol, adjusted=True, **kwargs):
+    '''Get series of close/adjusted close prices from ystockquote
     Args:
-        symbols: (str/iterable) of tickers to get the metric for
-        col_name: (str) name of column from the get_metrics output to be used.
-            Defaults to 'Adj Close'
-        **kwargs: start_date, end_date and ts_getter(ystockquote function) for get_metrics
+        symbol: (str) ticker for which to get close price
+        adjusted: (bool) whether to get adj close or close price. Default True
+        **kwargs: passed to get_metrics
     '''
-    # TODO: add test
+    return get_metrics(symbol, **kwargs)['Adj Close' if adjusted else 'Close'].to_frame(symbol)
+
+
+def get_closes(symbols, adjusted=True, **kwargs):
+    '''Creates a combined close prices df for an iterable of tickers
+    Args:
+        symbols: (str/iterable) of tickers to get the price for
+        adjusted: (bool) whether to get adj close or close price. Default True
+        **kwargs: passed to get_metrics
+    '''
     if not hasattr(symbols, '__iter__'):
         symbols = [symbols]
-    return pd.DataFrame.from_dict({symbol: get_metrics(symbol, **kwargs)[col_name]
-                                   for symbol in symbols})
+    return  pd.concat([get_close(symbol, adjusted=adjusted, **kwargs)
+                       for symbol in symbols], axis=1)
 
 
 def get_predictwise(link):

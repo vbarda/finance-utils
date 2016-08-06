@@ -4,8 +4,7 @@ import numpy as np
 import unittest
 
 from finutils.utils import column_renamer, lower_func, space_replace_func, get_last_business_day
-from finutils.ingest.timeseries import get_metrics
-from finutils.sk_utils.cv import CV
+from finutils.ingest.timeseries import get_metrics, get_close, get_closes
 
 
 class TestUtils(unittest.TestCase):
@@ -36,14 +35,17 @@ class TestMetrics(unittest.TestCase):
         desired_columns = ['Volume', 'Adj Close', 'High', 'Low', 'Close', 'Open']
         self.assertListEqual(sorted(desired_columns), sorted(ts.columns))
 
+class TestPrices(unittest.TestCase):
 
-class TestCV(unittest.TestCase):
+    def test_close(self):
+        aapl = get_close('AAPL')
+        self.assertEqual(aapl.columns, 'AAPL')
+        self.assertIsInstance(aapl, pd.DataFrame)
+        # test adjusted
+        aapl_unadjusted = get_close('AAPL', adjusted=False)
+        self.assertGreater(aapl_unadjusted.AAPL.loc['2016-06-06'], aapl.AAPL.loc['2016-06-06'])
+        # test multiple tickers
+        ts_df = get_closes(['AAPL', 'MSFT'])
+        self.assertListEqual(ts_df.columns.tolist(), ['AAPL', 'MSFT'])
+        self.assertIsInstance(ts_df, pd.DataFrame)
 
-    def test_split(self):
-        df = get_metrics('AAPL').pipe(column_renamer)
-        X_cols = df.columns.drop('close')
-        cv = CV(df, X_cols=X_cols, y_col='close', train_size=.8)
-        self.assertTupleEqual(df.drop('close', 1).shape, cv.X.shape)
-        self.assertTupleEqual(
-            np.concatenate([cv.X_tr, cv.X_te]).shape, cv.X.shape
-        )
