@@ -6,10 +6,14 @@
 '''
 
 import datetime
+from funcy import partial
 import json
-import urllib2
+from multiprocessing import Pool
 import pandas as pd
+import urllib2
 from ystockquote import get_historical_prices
+
+POOL_CPUS = 4
 
 def get_metrics(symbol, start_date=None, end_date=None, ts_getter=get_historical_prices):
     '''Use ystockquote functionality to get the timeseries df for a given ticker
@@ -30,7 +34,7 @@ def get_metrics(symbol, start_date=None, end_date=None, ts_getter=get_historical
 
 
 def get_close(symbol, adjusted=True, **kwargs):
-    '''Get series of close/adjusted close prices from ystockquote
+    '''Get dataframe of close/adjusted close prices from ystockquote
     Args:
         symbol: (str) ticker for which to get close price
         adjusted: (bool) whether to get adj close or close price. Default True
@@ -48,8 +52,9 @@ def get_closes(symbols, adjusted=True, **kwargs):
     '''
     if not hasattr(symbols, '__iter__'):
         symbols = [symbols]
-    return  pd.concat([get_close(symbol, adjusted=adjusted, **kwargs)
-                       for symbol in symbols], axis=1)
+    p = Pool(POOL_CPUS)
+    px_dfs = p.map(partial(get_close, adjusted=adjusted, **kwargs), symbols)
+    return pd.concat(px_dfs, axis=1)
 
 
 def get_predictwise(link):
