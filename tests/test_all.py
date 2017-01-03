@@ -4,7 +4,7 @@ import numpy as np
 import unittest
 
 from finutils.utils import column_renamer, lower_func, space_replace_func, get_last_business_day
-from finutils.ingest.timeseries import get_metrics, get_close, get_closes
+from finutils.ingest.timeseries import _get_series_from_yahoo, _get_close, get_close
 
 
 class TestUtils(unittest.TestCase):
@@ -26,8 +26,8 @@ class TestUtils(unittest.TestCase):
 
 class TestMetrics(unittest.TestCase):
 
-    def test_metrics(self):
-        ts = get_metrics('AAPL')
+    def test_yahoo_series(self):
+        ts = _get_series_from_yahoo('AAPL', 'Close')
         today = pd.to_datetime(datetime.datetime.today()).normalize()
         max_bdate = get_last_business_day(today)
         self.assertEqual(ts.index.min(), pd.to_datetime('2000-01-03'))
@@ -38,14 +38,14 @@ class TestMetrics(unittest.TestCase):
 class TestPrices(unittest.TestCase):
 
     def test_close(self):
-        aapl = get_close('AAPL')
+        aapl = _get_close('AAPL')
         self.assertEqual(aapl.columns, 'AAPL')
         self.assertIsInstance(aapl, pd.DataFrame)
         # test adjusted
-        aapl_unadjusted = get_close('AAPL', adjusted=False)
+        aapl_unadjusted = _get_close('AAPL', adjusted=False)
         self.assertGreater(aapl_unadjusted.AAPL.loc['2016-06-06'], aapl.AAPL.loc['2016-06-06'])
         # test multiple tickers
-        ts_df = get_closes(['AAPL', 'MSFT'])
+        ts_df = get_close(['AAPL', 'MSFT'])
         self.assertListEqual(ts_df.columns.tolist(), ['AAPL', 'MSFT'])
         self.assertIsInstance(ts_df, pd.DataFrame)
 

@@ -5,56 +5,86 @@
     URL: https://github.com/vbarda/finance-utils/
 '''
 
-import datetime
 from funcy import partial
 import json
 from multiprocessing import Pool
 import pandas as pd
+from pandas_datareader.data import DataReader
 import urllib2
-from ystockquote import get_historical_prices
 
 POOL_CPUS = 4
 
-def get_metrics(symbol, start_date=None, end_date=None, ts_getter=get_historical_prices):
-    '''Use ystockquote functionality to get the timeseries df for a given ticker
+def get_yahoo_data(symbol, start_date=None, end_date=None):
+    '''Use DataReader functionality to get the timeseries df for a given ticker
     Args:
-        symbol: ticker for which to get the metric
+        symbol: (str) ticker for which to get data
         start_date: (date/str) start date. Defaults to 01/01/2000
         end_date: (date/str) end date. Defaults to today
-        ts_getter: (function) ystockquote function that returns dictionary
     '''
     if start_date is None:
         start_date = '2000-01-01'
     if end_date is None:
-        end_date = pd.to_datetime(datetime.datetime.today()).strftime('%Y-%m-%d')
-    ts_dict = ts_getter(symbol, start_date, end_date)
-    ts_df = pd.DataFrame.from_dict(ts_dict, orient='index').astype(float)
-    ts_df.index = pd.to_datetime(ts_df.index)
-    return ts_df
+        end_date = pd.to_datetime(pd.datetime.today(), format='%Y-%m-%d')
+    return DataReader(symbol, data_source='yahoo', start=start_date, end=end_date)
 
 
-def get_close(symbol, adjusted=True, **kwargs):
-    '''Get dataframe of close/adjusted close prices from ystockquote
+def _get_series_from_yahoo(symbol, column, **kwargs):
+    '''Wrapper around get_yahoo_data to extract single timeseries
+    Args:
+        symbol: (str) ticker for which to get yahoo series
+        column: (str) series to pick from yahoo output
+    '''
+    return get_yahoo_data(symbol, **kwargs)[column].to_frame(symbol)
+
+
+def _get_close(symbol, adjusted=True, **kwargs):
+    '''Wrapper around _get_series_from_yahoo to extract close price series
     Args:
         symbol: (str) ticker for which to get close price
         adjusted: (bool) whether to get adj close or close price. Default True
-        **kwargs: passed to get_metrics
+        **kwargs: passed to _get_series_from_yahoo
     '''
-    return get_metrics(symbol, **kwargs)['Adj Close' if adjusted else 'Close'].to_frame(symbol)
+    column = 'Adj Close' if adjusted else 'Close'
+    return _get_series_from_yahoo(symbol, column=column, **kwargs)
 
 
-def get_closes(symbols, adjusted=True, **kwargs):
+def _get_volume(symbol, **kwargs):
+    '''Wrapper around _get_series_from_yahoo to extract volume series
+    Args:
+        symbol: (str) ticker for which to get volumes
+        **kwargs: passed to _get_series_from_yahoo
+    '''
+    return _get_series_from_yahoo(symbol, column='Volume', **kwargs)
+
+
+def _get_multiple_timeseries(symbols, ts_getter=_get_close):
+    '''Use multiprocessing to get series for multiple symbols'''
+    if not hasattr(symbols, '__iter__'):
+        symbols = [symbols]
+    p = Pool(POOL_CPUS)
+    px_dfs = p.map(ts_getter, symbols)
+    return pd.concat(px_dfs, axis=1)
+
+
+def get_close(symbols, adjusted=True, **kwargs):
     '''Creates a combined close prices df for an iterable of tickers
     Args:
         symbols: (str/iterable) of tickers to get the price for
         adjusted: (bool) whether to get adj close or close price. Default True
         **kwargs: passed to get_metrics
     '''
-    if not hasattr(symbols, '__iter__'):
-        symbols = [symbols]
-    p = Pool(POOL_CPUS)
-    px_dfs = p.map(partial(get_close, adjusted=adjusted, **kwargs), symbols)
-    return pd.concat(px_dfs, axis=1)
+    getter = partial(_get_close, adjusted=adjusted, **kwargs)
+    return _get_multiple_timeseries(symbols, getter)
+
+
+def get_volume(symbols, **kwargs):
+    '''Creates a combined volume df for an iterable of tickers
+    Args:
+        symbols: (str/iterable) of tickers to get the price for
+        **kwargs: passed to get_metrics
+    '''
+    getter = partial(_get_volume, **kwargs)
+    return _get_multiple_timeseries(symbols, getter)
 
 
 def get_predictwise(link):
