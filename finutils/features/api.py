@@ -1,7 +1,9 @@
 import pandas as pd
 
+from finutils.ingest.timeseries import get_close, get_volume
 
-def MACD(ser, ema_1=12, ema_2=26, signal_line=9):
+
+def macd(ser, ema_1=12, ema_2=26, signal_line=9):
     '''Returns the MACD line and the signal line
     Args:
         ema_1: (int) window for for short-term EWMA
@@ -15,3 +17,9 @@ def MACD(ser, ema_1=12, ema_2=26, signal_line=9):
     df = pd.concat([macd, signal], axis=1)
     df.columns = ['MACD({}, {})'.format(ema_1, ema_2), 'Signal ({})'.format(signal_line)]
     return df
+
+
+def rolling_vwap(symbols, window=50, **kwargs):
+    closes = get_close(symbols, **kwargs)
+    volumes = get_volume(symbols, **kwargs)
+    return closes.multiply(volumes).rolling(window).sum().div(volumes.rolling(window).sum())
