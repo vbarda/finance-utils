@@ -8,7 +8,11 @@
 *.rar
 *.tar
 *.zip
+*.pem
 
 # Python
 *.ipynb
 *.pyc
+
+# folders
+aws/
