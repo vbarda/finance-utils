@@ -6,11 +6,9 @@
 '''
 
 from funcy import partial
-import json
 from multiprocessing import Pool
 import pandas as pd
 from pandas_datareader.data import DataReader
-import urllib2
 
 POOL_CPUS = 4
 
@@ -85,15 +83,3 @@ def get_volume(symbols, **kwargs):
     '''
     getter = partial(_get_volume, **kwargs)
     return _get_multiple_timeseries(symbols, getter)
-
-
-def get_predictwise(link):
-    '''Scrape the data from predictwise.com'''
-    url = urllib2.urlopen(link)
-    json_str = json.load(url)
-    df_list = [pd.DataFrame(x.get('table')).assign(date=x.get('timestamp'))
-               for x in json_str['history']]
-    df = pd.concat(df_list).set_index('date')
-    df.index = pd.to_datetime(df.index)
-    df.columns = json_str.get('header')
-    return df

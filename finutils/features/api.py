@@ -1,6 +1,6 @@
 import pandas as pd
 
-from finutils.ingest.timeseries import get_close, get_volume
+from finutils.timeseries.api import get_close, get_volume
 
 
 def macd(ser, ema_1=12, ema_2=26, signal_line=9):

@@ -4,7 +4,7 @@ import numpy as np
 import unittest
 
 from finutils.utils import column_renamer, lower_func, space_replace_func, get_last_business_day
-from finutils.ingest.timeseries import _get_series_from_yahoo, _get_close, get_close
+from finutils.timeseries.yahoo import _get_series_from_yahoo, _get_close, get_close
 
 
 class TestUtils(unittest.TestCase):
@@ -48,4 +48,3 @@ class TestPrices(unittest.TestCase):
         ts_df = get_close(['AAPL', 'MSFT'])
         self.assertListEqual(ts_df.columns.tolist(), ['AAPL', 'MSFT'])
         self.assertIsInstance(ts_df, pd.DataFrame)
-
