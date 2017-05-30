@@ -1,5 +1,6 @@
 import arrow
 from collections import namedtuple
+import funcy
 import json
 import pandas as pd
 import urllib2
@@ -48,7 +49,7 @@ def _get_raw_financials(ticker, statement_type, quarterly):
     url_open = urllib2.urlopen(url)
     json_str = json.load(url_open)
 
-    raw = json_str['quoteSummary']['result'][0][module][config.submodule]
+    raw = funcy.get_in(json_str, ['quoteSummary', 'result', 0, module, config.submodule])
     return raw
 
 
