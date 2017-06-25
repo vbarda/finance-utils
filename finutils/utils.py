@@ -35,11 +35,12 @@ def split_to_numeric(ser, delim=' ', side=0):
     '''
     return ser.apply(lambda x: pd.to_numeric(x.split(delim)[side]))
 
-def get_last_business_day(date):
-    '''Find the last business day prior to date specified
+
+def get_last_business_day(date=None):
+    '''Find the last business day <= date specified
     Args:
-        date: (str) date
+        date: (str) date. defaults to today
     '''
-    end_date = pd.to_datetime(date)
-    start_date = end_date - datetime.timedelta(7)
-    return pd.bdate_range(start=start_date, end=end_date)[-1]
+    if date is None:
+        date = pd.datetime.today()
+    return pd.bdate_range(end=date, periods=1)[0]

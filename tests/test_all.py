@@ -4,7 +4,7 @@ import numpy as np
 import unittest
 
 from finutils.utils import column_renamer, lower_func, space_replace_func, get_last_business_day
-from finutils.timeseries.yahoo import _get_series_from_yahoo, _get_close, get_close
+from finutils.timeseries.quotes import _get_quote_series, get_close
 
 
 class TestUtils(unittest.TestCase):
@@ -24,26 +24,21 @@ class TestUtils(unittest.TestCase):
                               list(space_replace_df.columns))
 
 
-class TestMetrics(unittest.TestCase):
+class TestQuotes(unittest.TestCase):
 
-    def test_yahoo_series(self):
-        ts = _get_series_from_yahoo('AAPL', 'Close')
-        today = pd.to_datetime(datetime.datetime.today()).normalize()
-        max_bdate = get_last_business_day(today)
-        self.assertEqual(ts.index.min(), pd.to_datetime('2000-01-03'))
+    def test__get_quote_series(self):
+        ts = _get_quote_series('AAPL', 'Close', '2000-01-01', None)
+        max_bdate = get_last_business_day()
+        # check dates
+        self.assertEqual(ts.index.min(), pd.to_datetime('2001-07-30'))  # min date in Google Finance
         self.assertEqual(ts.index.max(), max_bdate)
-        desired_columns = ['Volume', 'Adj Close', 'High', 'Low', 'Close', 'Open']
-        self.assertListEqual(sorted(desired_columns), sorted(ts.columns))
-
-class TestPrices(unittest.TestCase):
+        # check columns
+        self.assertEqual(ts.columns, 'AAPL')
 
     def test_close(self):
-        aapl = _get_close('AAPL')
+        aapl = get_close('AAPL')
         self.assertEqual(aapl.columns, 'AAPL')
         self.assertIsInstance(aapl, pd.DataFrame)
-        # test adjusted
-        aapl_unadjusted = _get_close('AAPL', adjusted=False)
-        self.assertGreater(aapl_unadjusted.AAPL.loc['2016-06-06'], aapl.AAPL.loc['2016-06-06'])
         # test multiple tickers
         ts_df = get_close(['AAPL', 'MSFT'])
         self.assertListEqual(ts_df.columns.tolist(), ['AAPL', 'MSFT'])
